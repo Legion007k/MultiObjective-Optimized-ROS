@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<robot name="turtlebot" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <!-- TurtleBot 2 original: base Kobuki, placas y camara -->
+  <xacro:include filename="$(find turtlebot_description)/robots/kobuki_hexagons_kinect.urdf.xacro"/>
+
+  <!-- Cuerpo del RPLIDAR -->
+  <link name="rplidar_link">
+    <visual><geometry><cylinder radius="0.038" length="0.041"/></geometry></visual>
+    <collision><geometry><cylinder radius="0.038" length="0.041"/></geometry></collision>
+    <inertial>
+      <mass value="0.19"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
+  </link>
+
+  <!-- Montaje sobre la placa superior -->
+  <joint name="rplidar_joint" type="fixed">
+    <parent link="plate_top_link"/>
+    <child link="rplidar_link"/>
+    <origin xyz="0 0 0.03" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Sensor simulado: 360 grados, 10 Hz, hasta 12 m -->
+  <gazebo reference="rplidar_link">
+    <sensor type="ray" name="rplidar_a2">
+      <visualize>false</visualize>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>400</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+          </horizontal>
+        </scan>
+        <range><min>0.15</min><max>12.0</max><resolution>0.01</resolution></range>
+        <noise><type>gaussian</type><mean>0.0</mean><stddev>0.01</stddev></noise>
+      </ray>
+      <plugin name="rplidar_controller" filename="libgazebo_ros_laser.so">
+        <topicName>/scan</topicName>
+        <frameName>rplidar_link</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+</robot>
