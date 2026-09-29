@@ -1,0 +1,13 @@
+<launch>
+  <!-- 1. Base Kobuki: recibe velocidades y publica la odometria -->
+  <include file="$(find kobuki_node)/launch/minimal.launch"/>
+
+  <!-- 2. RPLIDAR: publica /scan -->
+  <node name="rplidar" pkg="rplidar_ros" type="rplidarNode" output="screen">
+    <param name="serial_port" value="/dev/ttyUSB0"/>
+    <param name="frame_id" value="rplidar_link"/>
+  </node>
+
+  <!-- 3. Traductor para el cerebro, puerto 9090 -->
+  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/>
+</launch>

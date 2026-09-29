@@ -1,8 +1,11 @@
 import math
 import time
 import roslibpy
+import os
 
-cliente = roslibpy.Ros(host="localhost", port=9090)
+HOST = os.environ.get("ROBOT_HOST", "localhost")# buscar variable de entorno ROBOT_HOST que es el robot real, si no existe usar localhost que es el robot virtual
+
+cliente = roslibpy.Ros(host=HOST, port=9090)
 cliente.run()
 print("Conectado a ROS:", cliente.is_connected)
 

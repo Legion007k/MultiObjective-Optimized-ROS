@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>tb2_real</name>
+  <version>0.0.1</version>
+  <description>Arranque del TurtleBot 2 real con RPLIDAR y rosbridge</description>
+  <maintainer email="karimortiz007@gmail.com">Karim Ortiz</maintainer>
+  <license>BSD</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>kobuki_node</exec_depend>
+  <exec_depend>rplidar_ros</exec_depend>
+  <exec_depend>rosbridge_server</exec_depend>
+</package>
