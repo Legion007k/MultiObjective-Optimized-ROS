@@ -12,6 +12,8 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ./ros_ws:/root/ros_ws
+    devices:
+      - /dev/ttyUSB0:/dev/kobuki
     deploy:
       resources:
         reservations:
@@ -19,6 +21,7 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+            
     command: sleep infinity
 
   brain:

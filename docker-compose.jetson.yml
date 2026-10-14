@@ -1,0 +1,18 @@
+version: "2.4"
+
+# Robot real en la Jetson TX2 (docker-compose 1.x)
+# - kobuki_node busca la base en /dev/kobuki
+# - tb2_real.launch espera el LiDAR en /dev/ttyUSB0 dentro del contenedor
+# - Los puertos reales del host se definen en un archivo .env en la Jetson,
+#   por ejemplo: KOBUKI_PORT=/dev/ttyUSB0 y LIDAR_PORT=/dev/ttyUSB1
+services:
+  robot:
+    build: ./robot
+    image: tbf-robot
+    network_mode: host
+    volumes:
+      - ./ros_ws:/root/ros_ws
+    devices:
+      - "${KOBUKI_PORT:-/dev/ttyUSB0}:/dev/kobuki"
+      - "${LIDAR_PORT:-/dev/ttyUSB1}:/dev/ttyUSB0"
+    command: sleep infinity
