@@ -1,4 +1,4 @@
-version: "2.4"
+version: "2.2"
 
 # Robot real en la Jetson TX2 (docker-compose 1.x)
 # - kobuki_node busca la base en /dev/kobuki
