@@ -36,9 +36,9 @@ def mover(v, w):
 try:
     while True:
         if estado["frente"] > 0.6:
-            v, w = 0.2, 0.0   # camino libre: avanza
+            v, w = 0.05, 0.0   # camino libre: avanza
         else:
-            v, w = 0.0, 0.8   # obstáculo: gira
+            v, w = 0.0, 0.3   # obstáculo: gira
         mover(v, w)
         print(f"frente = {estado['frente']:.2f} m   v = {v}   w = {w}")
         time.sleep(0.1)
