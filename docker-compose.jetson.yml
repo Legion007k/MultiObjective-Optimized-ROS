@@ -5,6 +5,10 @@ version: "2.2"
 # - tb2_real.launch espera el LiDAR en /dev/ttyUSB0 dentro del contenedor
 # - Los puertos reales del host se definen en un archivo .env en la Jetson,
 #   por ejemplo: KOBUKI_PORT=/dev/ttyUSB0 y LIDAR_PORT=/dev/ttyUSB1
+# - La camara Astra S se habla por USB directo (libusb), no por un puerto serial.
+#   Docker copia los dispositivos de /dev/bus/usb al crear el contenedor: si la
+#   camara se desconecta hay que recrearlo con docker-compose up -d --force-recreate
+#   (no usar privileged: expondria el /dev/ttyUSB0 real encima del LiDAR)
 services:
   robot:
     build: ./robot
@@ -12,7 +16,9 @@ services:
     network_mode: host
     volumes:
       - ./ros_ws:/root/ros_ws
+      - /run/udev:/run/udev:ro
     devices:
       - "${KOBUKI_PORT:-/dev/ttyUSB0}:/dev/kobuki"
       - "${LIDAR_PORT:-/dev/ttyUSB1}:/dev/ttyUSB0"
+      - /dev/bus/usb:/dev/bus/usb
     command: sleep infinity

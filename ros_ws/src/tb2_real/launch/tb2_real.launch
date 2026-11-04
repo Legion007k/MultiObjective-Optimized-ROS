@@ -1,4 +1,16 @@
 <launch>
+  <!-- La camara es opcional: sin este argumento el robot arranca igual que antes -->
+  <arg name="camara" default="false"/>
+
+  <!-- Posicion de los sensores respecto al centro de la base, en metros. MEDIR EN EL ROBOT.
+       x hacia el frente, y hacia la izquierda, z hacia arriba desde el piso -->
+  <arg name="lidar_x" default="0.0"/>
+  <arg name="lidar_y" default="0.0"/>
+  <arg name="lidar_z" default="0.0"/>
+  <arg name="camara_x" default="0.0"/>
+  <arg name="camara_y" default="0.0"/>
+  <arg name="camara_z" default="0.0"/>
+
   <!-- 1. Base Kobuki: recibe velocidades y publica la odometria -->
   <include file="$(find kobuki_node)/launch/minimal.launch"/>
 
@@ -8,6 +20,22 @@
     <param name="frame_id" value="rplidar_link"/>
   </node>
 
-  <!-- 3. Traductor para el cerebro, puerto 9090 -->
+  <!-- Argumentos: x y z yaw pitch roll padre hijo. El yaw del LiDAR es 0 porque
+       se giro fisicamente 180 grados para alinearlo con el frente del Kobuki -->
+  <node name="tf_lidar" pkg="tf2_ros" type="static_transform_publisher"
+        args="$(arg lidar_x) $(arg lidar_y) $(arg lidar_z) 0 0 0 base_footprint rplidar_link"/>
+
+  <!-- 3. Camara Astra S. Solo envia imagenes cuando alguien se suscribe a ellas.
+       El infrarrojo no puede transmitir junto con el color en este modelo -->
+  <group if="$(arg camara)">
+    <include file="$(find astra_camera)/launch/astra.launch">
+      <arg name="enable_ir" value="false"/>
+      <arg name="enable_point_cloud" value="false"/>
+    </include>
+    <node name="tf_camara" pkg="tf2_ros" type="static_transform_publisher"
+          args="$(arg camara_x) $(arg camara_y) $(arg camara_z) 0 0 0 base_footprint camera_link"/>
+  </group>
+
+  <!-- 4. Traductor para el cerebro, puerto 9090 -->
   <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/>
 </launch>

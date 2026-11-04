@@ -37,6 +37,31 @@ RUN apt-get update \
  && /bin/bash -c "source /opt/ros/melodic/setup.bash && catkin_make" \
  && rm -rf /var/lib/apt/lists/*
 
+# Camara Orbbec Astra S. Va en capas separadas despues de compilar el Kobuki para
+# que Docker reutilice esa compilacion y solo se agregue el driver de la camara.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    pkg-config libusb-1.0-0-dev libudev-dev libdw-dev libeigen3-dev libjpeg-dev \
+    python-numpy python-opencv \
+    ros-melodic-backward-ros ros-melodic-cv-bridge ros-melodic-image-geometry \
+    ros-melodic-image-transport ros-melodic-camera-info-manager \
+    ros-melodic-dynamic-reconfigure ros-melodic-tf2-ros ros-melodic-rgbd-launch \
+ && rm -rf /var/lib/apt/lists/*
+
+# libuvc fijo en v0.0.7: desde v0.0.9 pide CMake 3.13 y Ubuntu 18.04 trae 3.10
+WORKDIR /opt
+RUN git clone --depth 1 --branch v0.0.7 https://github.com/libuvc/libuvc.git \
+ && mkdir libuvc/build && cd libuvc/build \
+ && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j4 && make install && ldconfig \
+ && rm -rf /opt/libuvc
+
+# Driver fijado a un commit para que la imagen sea reproducible
+WORKDIR /opt/robot_deps_ws/src
+RUN git clone https://github.com/orbbec/ros_astra_camera.git \
+ && git -C ros_astra_camera checkout 210f530144314da7c70072215bacba12130d9b20
+
+WORKDIR /opt/robot_deps_ws
+RUN /bin/bash -c "source /opt/ros/melodic/setup.bash && catkin_make -j4"
+
 RUN echo "source /opt/robot_deps_ws/devel/setup.bash" >> /root/.bashrc \
  && echo "[ -f /root/ros_ws/devel/setup.bash ] && source /root/ros_ws/devel/setup.bash" >> /root/.bashrc
 
