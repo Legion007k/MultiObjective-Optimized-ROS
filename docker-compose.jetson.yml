@@ -1,14 +1,16 @@
-version: "2.2"
+version: "2.3"
 
 # Robot real en la Jetson TX2 (docker-compose 1.x)
 # - kobuki_node busca la base en /dev/kobuki
 # - tb2_real.launch espera el LiDAR en /dev/ttyUSB0 dentro del contenedor
-# - Los puertos reales del host se definen en un archivo .env en la Jetson,
+# - Los puertos reales del host se definen en .env en la Jetson,
 #   por ejemplo: KOBUKI_PORT=/dev/ttyUSB0 y LIDAR_PORT=/dev/ttyUSB1
-# - La camara Astra S se habla por USB directo (libusb), no por un puerto serial.
-#   Docker copia los dispositivos de /dev/bus/usb al crear el contenedor: si la
-#   camara se desconecta hay que recrearlo con docker-compose up -d --force-recreate
-#   (no usar privileged: expondria el /dev/ttyUSB0 real encima del LiDAR)
+# - La camara Astra S se habla por USB directo (libusb). Al abrirse se
+#   re-enumera y cambia de numero de dispositivo, asi que /dev/bus/usb se monta
+#   como volumen (refleja nodos nuevos en vivo) en lugar de copiarse en devices.
+# - device_cgroup_rules da acceso solo a dispositivos USB crudos (major 189).
+#   No toca los ttyUSB (major 188), asi que el remapeo del LiDAR sigue intacto.
+#   No usar privileged: expondria el /dev/ttyUSB0 real encima del LiDAR.
 services:
   robot:
     build: ./robot
@@ -17,8 +19,10 @@ services:
     volumes:
       - ./ros_ws:/root/ros_ws
       - /run/udev:/run/udev:ro
+      - /dev/bus/usb:/dev/bus/usb
     devices:
       - "${KOBUKI_PORT:-/dev/ttyUSB0}:/dev/kobuki"
       - "${LIDAR_PORT:-/dev/ttyUSB1}:/dev/ttyUSB0"
-      - /dev/bus/usb:/dev/bus/usb
+    device_cgroup_rules:
+      - "c 189:* rmw"
     command: sleep infinity
