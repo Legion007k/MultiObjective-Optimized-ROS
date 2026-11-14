@@ -134,3 +134,16 @@ Para la **comunicación con ROS**, el primer paso es que el cerebro en la Jetson
 Concentrar todo en la Jetson también fortalece la hipótesis del proyecto: percepción y planificación compitiendo por el mismo procesador y el mismo presupuesto de tiempo es justo el compromiso que el proyecto busca optimizar, y en una sola tarjeta ese conflicto existe y se puede medir.
 
 **Alternativa considerada: Raspberry Pi.** Se evaluó agregar una Raspberry Pi como cerebro junto a la Jetson, o pivotear todo a la Pi. La primera opción no resuelve nada que un contenedor no resuelva, y agrega peso, consumo, una segunda computadora y un salto de red con más latencia. La segunda pierde la GPU, lo que dejaría a YOLO en CPU a pocos cuadros por segundo. La Pi solo se retomaría si las mediciones muestran que la Jetson no alcanza a correr YOLO y el DQN dentro del presupuesto de tiempo, e incluso entonces la primera respuesta sería un modelo de YOLO más pequeño o una imagen de menor resolución antes que agregar hardware.
+
+### Decisión: cerebro nativo en la Jetson (noviembre 2026)
+
+Se descartó el segundo contenedor de cerebro. La arquitectura decidida es:
+
+- El contenedor `robot` de la Jetson sigue con Kobuki, LiDAR y rosbridge (puerto 9090).
+- El cerebro corre nativo en la Jetson con el Python 3.6 de JetPack, sin contenedor. Habla con ROS solo por `roslibpy==1.3.0` a `localhost:9090`, como `evasor.py`, sin `rospy`.
+- En producción la cámara la abre el cerebro directamente con OpenNI2 (paquete `primesense`) y el robot se lanza con `camara:=false`. La ruta ROS de la cámara (`camara:=true` y `prueba_sensores.py`) se conserva solo para diagnóstico. Los dos no pueden abrirla a la vez.
+- YOLO (YOLOv8n, COCO, clase persona) corre en TensorRT. El motor `.engine` se construye en la Jetson a partir de un `.onnx` exportado en la laptop.
+- La DQN será un MLP pequeño: sus pesos viajan como `.npz` y la inferencia es numpy puro. Mientras no exista, el cerebro usa una política reactiva provisional con el mismo espacio de acciones.
+- Idea central: la DQN no recibe la posición de la persona como verdad, sino también la calidad de la percepción (visible, confianza, antigüedad). En Gazebo no corre YOLO: se toma la posición real de la persona y se le aplica un perfil de errores medido en la Jetson (error, pérdidas, latencia). La percepción es configurable (modelo, resolución, umbral, cada cuántos cuadros) porque más adelante NSGA-II optimizará juntas la configuración de percepción y los pesos de recompensa.
+
+El uso está en `docs/cerebro_jetson.md`.
