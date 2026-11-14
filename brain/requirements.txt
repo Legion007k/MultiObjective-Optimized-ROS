@@ -1,3 +1,7 @@
 torch
 numpy
 roslibpy
+ultralytics
+onnx
+onnxslim
+onnxruntime
