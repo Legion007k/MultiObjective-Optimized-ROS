@@ -4,3 +4,6 @@ ros_ws/devel/
 .env
 ros_ws/capturas/
 .DS_Store
+models/*.engine
+onboard/vendor/
+logs/
